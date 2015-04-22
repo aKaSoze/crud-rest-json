@@ -7,10 +7,12 @@
 
 	<servlet>
 		<servlet-name>rest</servlet-name>
-		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>fractal.crud_rest_json.rest</param-value>
+			<param-name>javax.ws.rs.Application</param-name>
+			<param-value>fractal.crud_rest_json.rest.JerseyConfigurer</param-value>
+			<!-- <param-name>com.sun.jersey.config.property.packages</param-name> 
+				<param-value>fractal.crud_rest_json.rest</param-value> -->
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>

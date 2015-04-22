@@ -26,15 +26,7 @@ public abstract class Either<L, R> {
 	public <LE, RI> Either<LE, RI> map(Function<? super L, ? extends LE> leftMapper, Function<? super R, ? extends RI> rightMapper) {
 		Objects.requireNonNull(leftMapper);
 		Objects.requireNonNull(rightMapper);
-
-		switch (getType()) {
-		case LEFT:
-			return new Left<>(leftMapper.apply(asLeft().get()));
-		case RIGHT:
-			return new Right<>(rightMapper.apply(asRight().get()));
-		}
-
-		throw new IllegalArgumentException();
+		return flatMap(l -> new Left<>(leftMapper.apply(l)), r -> new Right<>(rightMapper.apply(r)));
 	}
 
 	public <LE, RI> Either<LE, RI> flatMap(Function<? super L, Either<LE, RI>> leftMapper, Function<? super R, Either<LE, RI>> rightMapper) {
@@ -51,6 +43,24 @@ public abstract class Either<L, R> {
 		throw new IllegalArgumentException();
 	}
 
+	public <T> T unify(Function<? super L, ? extends T> leftMapper, Function<? super R, ? extends T> rightMapper) {
+		Objects.requireNonNull(leftMapper);
+		Objects.requireNonNull(rightMapper);
+
+		switch (getType()) {
+		case LEFT:
+			return leftMapper.apply(asLeft().get());
+		case RIGHT:
+			return rightMapper.apply(asRight().get());
+		}
+
+		throw new IllegalArgumentException();
+	}
+
+	public <T> T unify(Function<Object, ? extends T> genericMapper) {
+		return unify(genericMapper, genericMapper);
+	}
+
 	public Optional<Either<L, R>> filter(Predicate<? super L> leftPredicate, Predicate<? super R> rightPredicate) {
 		Objects.requireNonNull(leftPredicate);
 		Objects.requireNonNull(rightPredicate);
@@ -63,6 +73,11 @@ public abstract class Either<L, R> {
 		}
 
 		throw new IllegalArgumentException();
+	}
+
+	@Override
+	public String toString() {
+		return unify(o -> getType() + ": " + o.getClass().getSimpleName() + " -> " + o.toString());
 	}
 
 	public static class Left<L, R> extends Either<L, R> {
@@ -112,9 +127,9 @@ public abstract class Either<L, R> {
 				break;
 			case RIGHT:
 				System.out.println("Long is: " + either.asRight().get());
+				break;
 			}
 		}
-
 	}
 
 }
