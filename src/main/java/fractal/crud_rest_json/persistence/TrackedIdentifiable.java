@@ -5,34 +5,33 @@ import java.util.Optional;
 
 public class TrackedIdentifiable implements Identifiable<Long> {
 
-	private Observable<Optional<Long>>	id			= new Observable<>(Optional.empty());
+	private Optional<Long>	id			= Optional.empty();
 
-	private Observable<String>			name;
+	private String			name;
 
-	private final Date					created		= new Date();
-	private Optional<Date>				lastUpdated	= Optional.empty();
+	private final Date		created		= new Date();
+	private Optional<Date>	lastUpdated	= Optional.empty();
 
 	public TrackedIdentifiable(String name) {
-		this.name = new Observable<>(name);
-		Observable.registerAfterAction(() -> lastUpdated = Optional.of(new Date()), id, this.name);
+		this.name = name;
 	}
 
 	@Override
 	public Optional<Long> getId() {
-		return id.get();
+		return id;
 	}
 
 	@Override
 	public void setId(Long key) {
-		id.set(Optional.of(key));
+		id = Optional.of(key);
 	}
 
 	public String getName() {
-		return name.get();
+		return name;
 	}
 
 	public void setName(String name) {
-		this.name.set(name);
+		this.name = name;
 	}
 
 	public Date getCreated() {
