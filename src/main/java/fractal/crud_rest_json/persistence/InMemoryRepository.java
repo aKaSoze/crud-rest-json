@@ -8,15 +8,19 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class InMemoryRepository<T extends Identifiable<K>, K> implements Repository<T, K> {
 
+	private String id;
+	
 	private final Map<K, T>			dataStore	= new HashMap<>();
 	private final KeyGenerator<K>	keyGenerator;
 
 	public InMemoryRepository(KeyGenerator<K> keyGenerator) {
 		this.keyGenerator = keyGenerator;
+		id = UUID.randomUUID().toString();
 	}
 
 	public Optional<T> get(K id) {
@@ -24,6 +28,7 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 	}
 
 	public Set<T> getAll() {
+		System.out.println(id);
 		return new HashSet<>(dataStore.values());
 	}
 
@@ -36,7 +41,11 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 	}
 
 	public void save(T t) {
-		dataStore.put(t.getId().orElse(keyGenerator.generate()), t);
+		if (!t.getId().isPresent()) {
+			t.setId(keyGenerator.generate());
+		}
+		dataStore.put(t.getId().get(), t);
+		System.out.println(id);
 	}
 
 	public void saveAll(Collection<T> ts) {

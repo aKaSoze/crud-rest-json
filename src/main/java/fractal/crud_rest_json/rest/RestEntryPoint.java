@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -13,26 +14,33 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import fractal.crud_rest_json.persistence.IdentifiableJsonObject;
+import fractal.crud_rest_json.persistence.Repository;
 import fractal.crud_rest_json.rest.Either.Right;
 
 @Path("{subResources:.*}")
 public class RestEntryPoint {
 
-	private static final Set<String>	beanPackages	= new HashSet<>();
+	private static final Set<String>					beanPackages	= new HashSet<>();
 
-	private UriInfo						uriInfo;
+	private UriInfo										uriInfo;
 
-	private Gson						gson;
+	private Gson										gson;
+
+	private Repository<IdentifiableJsonObject, String>	jsonRepo;
 
 	@Inject
-	public RestEntryPoint(UriInfo uriInfo, Gson gson) {
+	public RestEntryPoint(UriInfo uriInfo, Gson gson, Repository<IdentifiableJsonObject, String> jsonRepo) {
 		this.uriInfo = uriInfo;
 		this.gson = gson;
+		this.jsonRepo = jsonRepo;
 	}
 
 	static {
@@ -42,18 +50,38 @@ public class RestEntryPoint {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public String get() {
-		JsonObject jsonObject = new JsonObject();
-		jsonObject.addProperty("path", uriInfo.getPath());
-		for (ObjectReference objectReference : getObjectPath()) {
-			jsonObject.addProperty(objectReference.getName(), objectReference.key.orElse("All"));
-		}
+		ObjectReference objectReference = getLastObjectFromPath();
 
-		return gson.toJson(jsonObject);
+		if (objectReference.key.isPresent()) {
+			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.get(objectReference.key.get()), entityType -> jsonRepo.get(objectReference.key.get())));
+		} else {
+			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.getAll(), entityType -> jsonRepo.getAll()));
+		}
 	}
 
 	@POST
-	public String post(String jsonObject) {
-		return uriInfo.getPath();
+	public Response post(String jsonString) {
+		Either<Class<?>, String> entityType = getLastObjectFromPath().entityType;
+
+		JsonObject jsonObject = gson.fromJson(jsonString, JsonElement.class).getAsJsonObject();
+		String entityId = entityType.unify(clazz -> save(clazz, jsonObject), typeName -> save(typeName, jsonObject));
+
+		return Response.created(uriInfo.getAbsolutePathBuilder().path(entityId).build()).build();
+	}
+
+	private String save(Class<?> clazz, JsonObject jsonObject) {
+		return UUID.randomUUID().toString();
+	}
+
+	private String save(String typeName, JsonObject jsonObject) {
+		IdentifiableJsonObject identifiableJsonObject = new IdentifiableJsonObject(typeName, jsonObject);
+		jsonRepo.save(identifiableJsonObject);
+		return identifiableJsonObject.getId().get();
+	}
+
+	private ObjectReference getLastObjectFromPath() {
+		List<ObjectReference> objectPath = getObjectPath();
+		return objectPath.get(objectPath.size() - 1);
 	}
 
 	@PUT
@@ -88,7 +116,7 @@ public class RestEntryPoint {
 	}
 
 	public static void main(String[] args) {
-		RestEntryPoint entryPoint = new RestEntryPoint(null, new Gson());
+		RestEntryPoint entryPoint = new RestEntryPoint(null, new Gson(), null);
 		System.out.println(entryPoint.get());
 	}
 

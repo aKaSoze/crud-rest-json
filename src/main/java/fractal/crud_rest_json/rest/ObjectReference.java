@@ -6,6 +6,7 @@ import fractal.crud_rest_json.rest.Either.Left;
 import fractal.crud_rest_json.rest.Either.Right;
 
 public class ObjectReference {
+	
 	public final Either<Class<?>, String>	entityType;
 	public final Optional<String>			key;
 
