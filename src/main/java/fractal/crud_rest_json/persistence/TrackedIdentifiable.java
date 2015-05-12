@@ -26,18 +26,22 @@ public class TrackedIdentifiable implements Identifiable<String> {
 		id = Optional.of(key);
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	@Override
 	public Date getCreated() {
 		return created;
 	}
 
+	@Override
 	public Optional<Date> getLastUpdated() {
 		return lastUpdated;
 	}

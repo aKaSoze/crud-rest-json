@@ -8,19 +8,14 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class InMemoryRepository<T extends Identifiable<K>, K> implements Repository<T, K> {
 
-	private String id;
-	
-	private final Map<K, T>			dataStore	= new HashMap<>();
-	private final KeyGenerator<K>	keyGenerator;
+	private final Map<K, T>	dataStore	= new HashMap<>();
 
-	public InMemoryRepository(KeyGenerator<K> keyGenerator) {
-		this.keyGenerator = keyGenerator;
-		id = UUID.randomUUID().toString();
+	public InMemoryRepository() {
 	}
 
 	public Optional<T> get(K id) {
@@ -28,8 +23,12 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 	}
 
 	public Set<T> getAll() {
-		System.out.println(id);
 		return new HashSet<>(dataStore.values());
+	}
+
+	@Override
+	public Set<T> filter(Predicate<T> predicate) {
+		return getAll().stream().filter(predicate).collect(Collectors.toSet());
 	}
 
 	public LinkedHashSet<T> getAll(Comparator<T> sorter) {
@@ -41,11 +40,7 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 	}
 
 	public void save(T t) {
-		if (!t.getId().isPresent()) {
-			t.setId(keyGenerator.generate());
-		}
 		dataStore.put(t.getId().get(), t);
-		System.out.println(id);
 	}
 
 	public void saveAll(Collection<T> ts) {

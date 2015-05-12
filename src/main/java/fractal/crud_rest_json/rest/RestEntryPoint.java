@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -34,17 +33,17 @@ public class RestEntryPoint {
 
 	private Gson										gson;
 
-	private Repository<IdentifiableJsonObject, String>	jsonRepo;
+	private Repository<JsonObject, String>	jsonRepo;
+
+	static {
+		beanPackages.add("");
+	}
 
 	@Inject
 	public RestEntryPoint(UriInfo uriInfo, Gson gson, Repository<IdentifiableJsonObject, String> jsonRepo) {
 		this.uriInfo = uriInfo;
 		this.gson = gson;
 		this.jsonRepo = jsonRepo;
-	}
-
-	static {
-		beanPackages.add("");
 	}
 
 	@GET
@@ -55,33 +54,19 @@ public class RestEntryPoint {
 		if (objectReference.key.isPresent()) {
 			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.get(objectReference.key.get()), entityType -> jsonRepo.get(objectReference.key.get())));
 		} else {
-			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.getAll(), entityType -> jsonRepo.getAll()));
+			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.getAll(), typeName -> jsonRepo.filter(jsonObject -> jsonObject.getType().equals(typeName))));
 		}
 	}
 
 	@POST
 	public Response post(String jsonString) {
-		Either<Class<?>, String> entityType = getLastObjectFromPath().entityType;
-
+		ObjectReference objectReference = getLastObjectFromPath();
 		JsonObject jsonObject = gson.fromJson(jsonString, JsonElement.class).getAsJsonObject();
-		String entityId = entityType.unify(clazz -> save(clazz, jsonObject), typeName -> save(typeName, jsonObject));
+		
+		IdentifiableJsonObject identifiableJsonObject = objectReference.entityType.unify(clazz -> save(objectReference.key.get(), clazz, jsonObject),
+				typeName -> save(objectReference.key.get(), typeName, jsonObject));
 
-		return Response.created(uriInfo.getAbsolutePathBuilder().path(entityId).build()).build();
-	}
-
-	private String save(Class<?> clazz, JsonObject jsonObject) {
-		return UUID.randomUUID().toString();
-	}
-
-	private String save(String typeName, JsonObject jsonObject) {
-		IdentifiableJsonObject identifiableJsonObject = new IdentifiableJsonObject(typeName, jsonObject);
-		jsonRepo.save(identifiableJsonObject);
-		return identifiableJsonObject.getId().get();
-	}
-
-	private ObjectReference getLastObjectFromPath() {
-		List<ObjectReference> objectPath = getObjectPath();
-		return objectPath.get(objectPath.size() - 1);
+		return Response.created(uriInfo.getAbsolutePathBuilder().path(identifiableJsonObject.getName()).build()).build();
 	}
 
 	@PUT
@@ -92,6 +77,21 @@ public class RestEntryPoint {
 	@DELETE
 	public String delete() {
 		return uriInfo.getPath();
+	}
+
+	private IdentifiableJsonObject save(String name, Class<?> clazz, JsonObject jsonObject) {
+		return null;
+	}
+
+	private IdentifiableJsonObject save(String name, String typeName, JsonObject jsonObject) {
+		IdentifiableJsonObject identifiableJsonObject = new IdentifiableJsonObject(typeName, name, jsonObject);
+		jsonRepo.save(identifiableJsonObject);
+		return identifiableJsonObject;
+	}
+
+	private ObjectReference getLastObjectFromPath() {
+		List<ObjectReference> objectPath = getObjectPath();
+		return objectPath.get(objectPath.size() - 1);
 	}
 
 	private List<ObjectReference> getObjectPath() {
