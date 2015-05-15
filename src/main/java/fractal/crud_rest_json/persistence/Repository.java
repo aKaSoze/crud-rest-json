@@ -15,6 +15,8 @@ public interface Repository<T extends Identifiable<K>, K> {
 
 	Set<T> filter(Predicate<T> filter);
 
+	Optional<T> yield(Predicate<T> filter);
+
 	LinkedHashSet<T> getAll(Comparator<T> sorter);
 
 	Set<T> getAll(Collection<K> ids);

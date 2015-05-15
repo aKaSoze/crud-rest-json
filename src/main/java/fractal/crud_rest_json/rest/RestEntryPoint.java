@@ -3,6 +3,8 @@ package fractal.crud_rest_json.rest;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -20,53 +22,60 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import fractal.crud_rest_json.persistence.IdentifiableJsonObject;
+import fractal.crud_rest_json.persistence.Decorator;
+import fractal.crud_rest_json.persistence.Identifiable;
+import fractal.crud_rest_json.persistence.IdentifiableJson;
 import fractal.crud_rest_json.persistence.Repository;
+import fractal.crud_rest_json.persistence.RepositoryLocator;
 import fractal.crud_rest_json.rest.Either.Right;
 
 @Path("{subResources:.*}")
 public class RestEntryPoint {
 
-	private static final Set<String>					beanPackages	= new HashSet<>();
+	private static final Set<String>						beanPackages	= new HashSet<>();
 
-	private UriInfo										uriInfo;
+	private final UriInfo									uriInfo;
 
-	private Gson										gson;
+	private final Gson										gson;
 
-	private Repository<JsonObject, String>	jsonRepo;
+	private final RepositoryLocator							repositoryLocator;
+
+	private final Decorator<Identifiable<String>, String>	decorator;
 
 	static {
 		beanPackages.add("");
 	}
 
 	@Inject
-	public RestEntryPoint(UriInfo uriInfo, Gson gson, Repository<IdentifiableJsonObject, String> jsonRepo) {
+	public RestEntryPoint(UriInfo uriInfo, Gson gson, RepositoryLocator repositoryLocator, Decorator<Identifiable<String>, String> decorator) {
 		this.uriInfo = uriInfo;
 		this.gson = gson;
-		this.jsonRepo = jsonRepo;
+		this.repositoryLocator = Objects.requireNonNull(repositoryLocator);
+		this.decorator = Objects.requireNonNull(decorator);
+
 	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public String get() {
 		ObjectReference objectReference = getLastObjectFromPath();
+		Repository<IdentifiableJson, String> jsonRepo = repositoryLocator.getRepository(objectReference.entityType.asRight().get());
 
 		if (objectReference.key.isPresent()) {
-			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.get(objectReference.key.get()), entityType -> jsonRepo.get(objectReference.key.get())));
+			return objectReference.key.map(key -> objectReference.entityType.map(clazz -> jsonRepo.get(key), typeAsString -> getIdentifiable(typeAsString, key)).unify(gson::toJson)).get().toString();
 		} else {
-			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.getAll(), typeName -> jsonRepo.filter(jsonObject -> jsonObject.getType().equals(typeName))));
+			return gson.toJson(objectReference.entityType.map(clazz -> jsonRepo.getAll(), typeName -> jsonRepo.getAll()));
 		}
 	}
 
 	@POST
 	public Response post(String jsonString) {
-		ObjectReference objectReference = getLastObjectFromPath();
 		JsonObject jsonObject = gson.fromJson(jsonString, JsonElement.class).getAsJsonObject();
-		
-		IdentifiableJsonObject identifiableJsonObject = objectReference.entityType.unify(clazz -> save(objectReference.key.get(), clazz, jsonObject),
-				typeName -> save(objectReference.key.get(), typeName, jsonObject));
+		ObjectReference objectReference = getLastObjectFromPath();
 
-		return Response.created(uriInfo.getAbsolutePathBuilder().path(identifiableJsonObject.getName()).build()).build();
+		IdentifiableJson identifiableJson = objectReference.entityType.unify(clazz -> save(clazz, jsonObject), typeName -> save(typeName, jsonObject));
+
+		return Response.created(uriInfo.getAbsolutePathBuilder().path(identifiableJson.getName()).build()).build();
 	}
 
 	@PUT
@@ -79,14 +88,26 @@ public class RestEntryPoint {
 		return uriInfo.getPath();
 	}
 
-	private IdentifiableJsonObject save(String name, Class<?> clazz, JsonObject jsonObject) {
+	private IdentifiableJson save(Class<?> clazz, JsonObject jsonObject) {
 		return null;
 	}
 
-	private IdentifiableJsonObject save(String name, String typeName, JsonObject jsonObject) {
-		IdentifiableJsonObject identifiableJsonObject = new IdentifiableJsonObject(typeName, name, jsonObject);
-		jsonRepo.save(identifiableJsonObject);
-		return identifiableJsonObject;
+	private JsonObject getIdentifiable(String typeAsString, String key) {
+		Repository<IdentifiableJson, String> repo = repositoryLocator.getRepository(typeAsString);
+		Optional<IdentifiableJson> valueByName = repo.yield(json -> json.getName().equals(key));
+		if (valueByName.isPresent()) {
+			return valueByName.get().getJsonObject();
+		} else {
+			return repo.get(key).get().getJsonObject();
+		}
+	}
+
+	private IdentifiableJson save(String typeName, JsonObject jsonObject) {
+		IdentifiableJson identifiableJson = new IdentifiableJson(jsonObject);
+		decorator.decorate(identifiableJson);
+		Repository<IdentifiableJson, String> jsonRepo = repositoryLocator.getRepository(typeName);
+		jsonRepo.save(identifiableJson);
+		return identifiableJson;
 	}
 
 	private ObjectReference getLastObjectFromPath() {
@@ -116,7 +137,7 @@ public class RestEntryPoint {
 	}
 
 	public static void main(String[] args) {
-		RestEntryPoint entryPoint = new RestEntryPoint(null, new Gson(), null);
+		RestEntryPoint entryPoint = new RestEntryPoint(null, new Gson(), null, new Decorator<>(() -> ""));
 		System.out.println(entryPoint.get());
 	}
 

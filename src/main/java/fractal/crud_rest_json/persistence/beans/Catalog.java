@@ -2,9 +2,9 @@ package fractal.crud_rest_json.persistence.beans;
 
 import java.util.LinkedHashSet;
 
-import fractal.crud_rest_json.persistence.TrackedIdentifiable;
+import fractal.crud_rest_json.persistence.IdentifiableBean;
 
-public class Catalog extends TrackedIdentifiable {
+public class Catalog extends IdentifiableBean {
 
 	private LinkedHashSet<Category>	categories;
 

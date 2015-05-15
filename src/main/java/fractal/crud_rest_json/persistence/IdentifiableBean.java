@@ -3,7 +3,7 @@ package fractal.crud_rest_json.persistence;
 import java.util.Date;
 import java.util.Optional;
 
-public class TrackedIdentifiable implements Identifiable<String> {
+public class IdentifiableBean implements Identifiable<String> {
 
 	private Optional<String>	id			= Optional.empty();
 
@@ -12,7 +12,7 @@ public class TrackedIdentifiable implements Identifiable<String> {
 	private final Date			created		= new Date();
 	private Optional<Date>		lastUpdated	= Optional.empty();
 
-	public TrackedIdentifiable(String name) {
+	public IdentifiableBean(String name) {
 		this.name = name;
 	}
 
@@ -44,6 +44,18 @@ public class TrackedIdentifiable implements Identifiable<String> {
 	@Override
 	public Optional<Date> getLastUpdated() {
 		return lastUpdated;
+	}
+
+	@Override
+	public void setCreated(Date date) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setLastUpdated(Date date) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

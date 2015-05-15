@@ -15,17 +15,21 @@ public class IdentifiableJson implements Identifiable<String> {
 
 	private JsonObject			jsonObject;
 
+	public IdentifiableJson(JsonObject jsonObject) {
+		setJsonObject(jsonObject);
+	}
+
 	public JsonObject getJsonObject() {
 		return jsonObject;
 	}
 
 	public void setJsonObject(JsonObject jsonObject) {
-		this.jsonObject = jsonObject;
+		this.jsonObject = Objects.requireNonNull(jsonObject);
 	}
 
 	@Override
 	public Optional<String> getId() {
-		return Optional.ofNullable(jsonObject.get("id").getAsString());
+		return Optional.ofNullable(jsonObject.get("id") == null ? null : jsonObject.get("id").getAsString());
 	}
 
 	@Override
@@ -59,12 +63,12 @@ public class IdentifiableJson implements Identifiable<String> {
 
 	@Override
 	public void setLastUpdated(Date updated) {
-		jsonObject.addProperty("updated", dateFormat.format(Objects.requireNonNull(updated)));
+		jsonObject.addProperty("lastUpdated", dateFormat.format(Objects.requireNonNull(updated)));
 	}
 
 	@Override
 	public Optional<Date> getLastUpdated() {
-		return Optional.ofNullable(jsonObject.get("updated").getAsString()).map(updated -> {
+		return Optional.ofNullable(jsonObject.get("lastUpdated").getAsString()).map(updated -> {
 			try {
 				return dateFormat.parse(updated);
 			} catch (ParseException e) {
@@ -72,5 +76,4 @@ public class IdentifiableJson implements Identifiable<String> {
 			}
 		});
 	}
-
 }

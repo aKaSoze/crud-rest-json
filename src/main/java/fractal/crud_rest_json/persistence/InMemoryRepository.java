@@ -31,6 +31,11 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 		return getAll().stream().filter(predicate).collect(Collectors.toSet());
 	}
 
+	@Override
+	public Optional<T> yield(Predicate<T> predicate) {
+		return getAll().stream().filter(predicate).findFirst();
+	}
+	
 	public LinkedHashSet<T> getAll(Comparator<T> sorter) {
 		return new LinkedHashSet<T>(dataStore.values().stream().sorted(sorter).collect(Collectors.toList()));
 	}
@@ -62,4 +67,5 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 	public Set<K> toIds(Collection<T> ts) {
 		return ts.stream().filter(t -> t.getId().isPresent()).map(t -> t.getId().get()).collect(Collectors.toSet());
 	}
+	
 }
