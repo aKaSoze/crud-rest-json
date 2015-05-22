@@ -1,28 +1,30 @@
 package fractal.crud_rest_json.persistence;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
-public class IdentifiableBean implements Identifiable<String> {
+public class IdentifiableBean implements Identifiable<UUID> {
 
-	private Optional<String>	id			= Optional.empty();
+	private Optional<UUID>	id			= Optional.empty();
 
-	private String				name;
+	private String			name;
 
-	private final Date			created		= new Date();
-	private Optional<Date>		lastUpdated	= Optional.empty();
+	private Date			created		= new Date();
+	private Optional<Date>	lastUpdated	= Optional.empty();
 
 	public IdentifiableBean(String name) {
 		this.name = name;
 	}
 
 	@Override
-	public Optional<String> getId() {
+	public Optional<UUID> getId() {
 		return id;
 	}
 
 	@Override
-	public void setId(String key) {
+	public void setId(UUID key) {
 		id = Optional.of(key);
 	}
 
@@ -42,20 +44,18 @@ public class IdentifiableBean implements Identifiable<String> {
 	}
 
 	@Override
+	public void setCreated(Date created) {
+		this.created = Objects.requireNonNull(created);
+	}
+
+	@Override
 	public Optional<Date> getLastUpdated() {
 		return lastUpdated;
 	}
 
 	@Override
-	public void setCreated(Date date) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setLastUpdated(Date date) {
-		// TODO Auto-generated method stub
-
+	public void setLastUpdated(Date lastUpdated) {
+		this.lastUpdated = Optional.of(lastUpdated);
 	}
 
 }

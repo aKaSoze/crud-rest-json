@@ -10,7 +10,7 @@ public class RepositoryLocator {
 	private final Map<String, Repository<?, ?>>		genericRepos	= new HashMap<>();
 
 	@SuppressWarnings("unchecked")
-	public <T extends Identifiable<K>, K> Repository<T, K> getRepository(Class<T> clazz) {
+	public <T extends Identifiable<K>, K> Repository<T, K> locate(Class<T> clazz) {
 		if (!repos.containsKey(clazz)) {
 			repos.put(clazz, new InMemoryRepository<>());
 		}
@@ -18,7 +18,7 @@ public class RepositoryLocator {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Identifiable<K>, K> Repository<T, K> getRepository(String extraType) {
+	public <T extends Identifiable<K>, K> Repository<T, K> locate(String extraType) {
 		if (!genericRepos.containsKey(extraType)) {
 			genericRepos.put(extraType, new InMemoryRepository<>());
 		}

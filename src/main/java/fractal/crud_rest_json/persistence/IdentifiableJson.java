@@ -6,10 +6,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.google.gson.JsonObject;
 
-public class IdentifiableJson implements Identifiable<String> {
+public class IdentifiableJson implements Identifiable<UUID> {
 
 	private final DateFormat	dateFormat	= new SimpleDateFormat();
 
@@ -28,13 +29,14 @@ public class IdentifiableJson implements Identifiable<String> {
 	}
 
 	@Override
-	public Optional<String> getId() {
-		return Optional.ofNullable(jsonObject.get("id") == null ? null : jsonObject.get("id").getAsString());
+	public Optional<UUID> getId() {
+		return Optional.ofNullable(jsonObject.get("id")).map(json -> UUID.fromString(json.getAsString()));
 	}
 
 	@Override
-	public void setId(String key) {
-		jsonObject.addProperty("id", key);
+	public void setId(UUID key) {
+		Objects.requireNonNull(key);
+		jsonObject.addProperty("id", key.toString());
 	}
 
 	@Override
