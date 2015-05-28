@@ -10,16 +10,16 @@ public class Person extends IdentifiableBean {
 		super(name);
 	}
 
-	private String	fristName;
+	private String	firstName;
 	private String	lastName;
 	private Date	dateOfBirth;
 
-	public String getFristName() {
-		return fristName;
+	public String getFirstName() {
+		return firstName;
 	}
 
-	public void setFristName(String fristName) {
-		this.fristName = fristName;
+	public void setFirstName(String fristName) {
+		this.firstName = fristName;
 	}
 
 	public String getLastName() {
