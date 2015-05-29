@@ -60,12 +60,11 @@ public class RestEntryPoint {
 		this.decorator = Objects.requireNonNull(decorator);
 	}
 
-	@SuppressWarnings("unchecked")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response get(@Context ObjectReference lastObjectFromPath) {
 		return lastObjectFromPath.key.map(key -> toResponse(getIdentifiable(lastObjectFromPath.entityType, key))).orElse(
-				Response.ok(gson.toJson(repositoryLocator.locate((Either<Class<? extends Identifiable<UUID>>, String>) (Object) lastObjectFromPath.entityType).getAll())).build());
+				Response.ok(gson.toJson(getRepo(lastObjectFromPath.entityType).getAll())).build());
 	}
 
 	@POST
@@ -85,14 +84,14 @@ public class RestEntryPoint {
 		return uriInfo.getPath();
 	}
 
-	public static interface Foo {
-		void boo();
-	}
-
 	@DELETE
-	public String delete() {
-		return uriInfo.getPath();
-
+	public void delete(@Context ObjectReference lastObjectFromPath) {
+		lastObjectFromPath.key.ifPresent(key -> getRepo(lastObjectFromPath.entityType).delete(UUID.fromString(key)));
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Repository<? extends Identifiable<UUID>, UUID> getRepo(Either<Class<? extends IdentifiableBean>, String> entityType) {
+		return repositoryLocator.locate((Either<Class<? extends Identifiable<UUID>>, String>) (Object) entityType);
 	}
 
 	private Optional<? extends Identifiable<UUID>> getIdentifiable(Either<Class<? extends IdentifiableBean>, String> type, String key) {
