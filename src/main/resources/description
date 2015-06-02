@@ -1,0 +1,69 @@
+Abstract
+	While common architecture concerns like security, scalabillity, robustness, resillience, continous delivery and test coverage (corectness) are addressed by conventional aproaches to software development
+	they are so by neglecting and in many casses to the detriment of another crucial aspect of developing big applications: teamwork.
+	
+	The fractal aproach is to build a system that has the spotlight and focuses on trivial work integration from different resources while maintaining the desired properties listed above. Such a system
+	allows for a logic modularization of the application based on business concerns and is addressed to senior developers that can take real ownership over business areas and provide stable fucntionality
+	while applying their own tehniques and 'best practices'.    
+
+	A major shift of perspective is to move the maintnance and code quality concerns from being a continous process that slows down teams and creates useless friction to a functionality based concern
+	where all that matters is that a module delivers it's functional requirments. A developer will acquire ownership over many functionality areas and build and maintain the modules without oversight.
+	When a developer leaves the team the modules are either rewritten from specification or taken over by other team members. Though this seems like a radical aproach the reality is that all the time lost
+	with code reviews, pair programming and standardization of coding style sums up to more effort than a rewrite from specification for modules that are rejected by all team members. The main problem
+	is to actually have a real perception on how time is lost with this traditional tehniques and how developer creativity and comfort (using the tools and style he/she knows) are inhibited, reducing the productivity
+	beyond what is obvious.
+	  
+
+Architecture
+	The backbone of any system built with the fractal architecture is composed of n simple elements:
+	
+	1. Events:
+		 All requests or state changing actions are registered in a sequential append log in json format. The datastore for this log will be postgres with a write master an multiple read replicas, the duplication
+		 is a mix of real time duplication and offline bulk duplication.
+		
+	2. Microservices:
+		In lack of a better term, the microservices are the modules of functionality, each belonging to a single developer. There are no constraints on the language or platform used to build a microservice.
+		Microservices run in their own virtual machine and communicate with other peers only by asynchronus message passing through the UDP protocol.
+		
+	3. Gossip protocol for discovery of new services and load balancing.
+	
+	4. ReST-json interface with the outside world:
+		The battle of formats has been won by the json format. All clients will interract with the system through a simple https ReST interface using json objects. There are reasons to consider
+		a full duplex protocol between client and server like web sockets the only concern being client capability.
+		
+		  
+		
+
+Assets
+
+	This is the most important property of the fractal system. The assets gathered from the research and development process are completly diffrent from classical systems and non intuitive.
+	The actual code and the current state of the system (witch is assumed to be correct) are considered the vital assets of most companies that rely on software or deliver software as a service.
+	There are many disatvantages associated with this assets. 
+	
+	First the code even though at the time of development seems up to date and up to par with the newest trends as it grows in size and complexity,
+	as more and more people work on the same functionality as refactorings are piled on top of eachother it becomes unmanageable, many modules become untouchable and a coding style bottleneck is promoted as
+	the only hope to keep the code readable and extensible. Many technologies are ignored simply because the team seniors are more comfortable with a particular one. The alternative is to look at code as a black box,
+	the asset becomes the functional specification witch should be done a la carte and the runnable virtual machine that provides that functionality. If the module owner leaves the team there are still chances 
+	some other collegue knows the technologies used within that module and is ok with the code quality inherited. Many times this will not be the case and though radical, the solution will be to rewrite the module 
+	as soon as new requirments or bugs are associated with the orphan module. The time and effort for this task is covered by the fact that no other oversight resources are involved at any point in the development
+	process. In short, code written in x technology to the best of the teams ability at some point in time is replaced by the functional spec and the hosted process that complies with the microservice constraints
+	listed in the architecture section. Code can be thrown away, specifications only refined and evolved.
+	
+	Second the current state of the system is replaced by the ability to compose that state or any other state (very important) by parsing the entire event log. In this sense the data asset of the company is
+	the simple, clear, versioned event log. The current state can be thrown away and recomposed as a trivial operation. To avoid replay from begining of time snapshots can also be kept but this is not
+	encouraged as requirments can dinamically change and the same events will generate a different state based on the business logic applied to them.
+	
+
+Deployment
+
+	Every developer has the responsability to provide a build script of a virtual machine suited for the microservice that it hosts, compilation and packaging steps are included in this script.
+	All srcipts will be concetrated and used form the monitor and deployment tool. IT ops should provide physical machines and networking between those machines, all other concerns are within the scope
+	of the deployment tool. Default build scripts will be provided for Java applications.   
+
+Testing
+
+	The definition of done for a microservice revolves arround the scheduled integration tests that completly cover the functional specifications. Functional specifications will be written as a test cases.
+	For any specification there will be two microservices: one that implements the logic and one that acts as a client and recursevly runs the test scenarios against the system.  	
+
+
+Monitoring
