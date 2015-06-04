@@ -27,9 +27,13 @@ public interface Repository<T extends Identifiable<K>, K> {
 
 	void saveAll(Collection<T> ts);
 
+	void delete(T t);
+	
 	void delete(K id);
 
 	void deleteAll(Collection<T> ts);
+	
+	void deleteAll();
 
 	void deleteAllById(Collection<K> ids);
 

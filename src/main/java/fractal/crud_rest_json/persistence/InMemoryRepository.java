@@ -26,17 +26,14 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 		return new HashSet<>(dataStore.values());
 	}
 
-	@Override
 	public Set<T> filter(Predicate<T> predicate) {
 		return getAll().stream().filter(predicate).collect(Collectors.toSet());
 	}
 
-	@Override
 	public Optional<T> yield(Predicate<T> predicate) {
 		return getAll().stream().filter(predicate).findFirst();
 	}
 
-	@Override
 	public Boolean exists(Predicate<T> filter) {
 		return yield(filter).isPresent();
 	}
@@ -57,12 +54,20 @@ public class InMemoryRepository<T extends Identifiable<K>, K> implements Reposit
 		ts.stream().forEach(t -> save(t));
 	}
 
+	public void delete(T t) {
+		delete(t.getId().get());
+	}
+
 	public void delete(K id) {
 		dataStore.remove(id);
 	}
 
 	public void deleteAll(Collection<T> ts) {
 		dataStore.values().removeAll(ts);
+	}
+
+	public void deleteAll() {
+		dataStore.clear();
 	}
 
 	public void deleteAllById(Collection<K> ids) {

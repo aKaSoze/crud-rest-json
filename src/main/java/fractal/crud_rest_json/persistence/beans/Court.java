@@ -6,21 +6,11 @@ import fractal.crud_rest_json.persistence.IdentifiableBean;
 
 public class Court extends IdentifiableBean {
 
-	private Arena	arena;
-
 	private Long	minNumberOfPlayers;
 	private Long	maxNumberOfPlayers;
 
 	public Court(String name) {
 		super(name);
-	}
-
-	public Arena getArena() {
-		return arena;
-	}
-
-	public void setArena(Arena arena) {
-		this.arena = arena;
 	}
 
 	public Long getMinNumberOfPlayers() {

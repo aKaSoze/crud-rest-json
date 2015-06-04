@@ -8,15 +8,17 @@ import fractal.crud_rest_json.persistence.IdentifiableBean;
 public class Booking extends IdentifiableBean {
 
 	private User	user;
+	private Court	court;
 
 	private Date	startTime;
 	private Date	endTime;
 
-	public Booking(String name, User user, Date startTime, Date endTime) {
+	public Booking(String name, User user, Court court, Date startTime, Date endTime) {
 		super(name);
 		this.startTime = Objects.requireNonNull(startTime);
 		this.endTime = Objects.requireNonNull(endTime);
 		setUser(user);
+		setCourt(court);
 	}
 
 	public User getUser() {
@@ -25,6 +27,14 @@ public class Booking extends IdentifiableBean {
 
 	public void setUser(User user) {
 		this.user = Objects.requireNonNull(user);
+	}
+
+	public Court getCourt() {
+		return court;
+	}
+
+	public void setCourt(Court court) {
+		this.court = Objects.requireNonNull(court);
 	}
 
 	public Date getStartTime() {

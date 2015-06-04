@@ -15,7 +15,7 @@ public class IdentifiableBean implements Identifiable<UUID> {
 	private Optional<Date>	lastUpdated	= Optional.empty();
 
 	public IdentifiableBean(String name) {
-		this.name = name;
+		setName(name);
 	}
 
 	@Override
@@ -35,7 +35,7 @@ public class IdentifiableBean implements Identifiable<UUID> {
 
 	@Override
 	public void setName(String name) {
-		this.name = name;
+		this.name = Objects.requireNonNull(name);
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package fractal.crud_rest_json.rest;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +18,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import com.google.gson.Gson;
@@ -68,14 +70,20 @@ public class RestEntryPoint {
 	}
 
 	@POST
-	public Response post(@Context ObjectReference lastObjectFromPath, String jsonString) {
+	public Response post(@Context LinkedHashSet<ObjectReference> objectPath, @Context ObjectReference lastObjectFromPath, String jsonString) {
 		JsonObject jsonObject = gson.fromJson(jsonString, JsonElement.class).getAsJsonObject();
-
+		
 		try {
-			Identifiable<?> identifiable = lastObjectFromPath.entityType.unify(clazz -> save(clazz, jsonObject), typeName -> save(typeName, jsonObject));
-			return Response.created(uriInfo.getAbsolutePathBuilder().path(identifiable.getName()).build()).build();
-		} catch (ValidationException v) {
-			return Response.status(Status.BAD_REQUEST).entity(v.getMessage()).build();
+			UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+			if(lastObjectFromPath.key.isPresent()) {
+				jsonObject.addProperty("name", lastObjectFromPath.key.get());
+			} else {
+				uriBuilder.path(jsonObject.get("name").getAsString());
+			}
+			lastObjectFromPath.entityType.unify(clazz -> save(clazz, jsonObject), typeName -> save(typeName, jsonObject));
+			return Response.created(uriBuilder.build()).build();
+		} catch (ValidationException vex) {
+			return Response.status(Status.BAD_REQUEST).entity(gson.toJson(vex)).build();
 		}
 	}
 
@@ -86,9 +94,13 @@ public class RestEntryPoint {
 
 	@DELETE
 	public void delete(@Context ObjectReference lastObjectFromPath) {
-		lastObjectFromPath.key.ifPresent(key -> getRepo(lastObjectFromPath.entityType).delete(UUID.fromString(key)));
+		if(lastObjectFromPath.key.isPresent()) {
+			getIdentifiable(lastObjectFromPath.entityType, lastObjectFromPath.key.get()).ifPresent(bean -> getRepo(lastObjectFromPath.entityType).delete(bean.getId().get()));
+		} else {
+			getRepo(lastObjectFromPath.entityType).deleteAll();
+		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private Repository<? extends Identifiable<UUID>, UUID> getRepo(Either<Class<? extends IdentifiableBean>, String> entityType) {
 		return repositoryLocator.locate((Either<Class<? extends Identifiable<UUID>>, String>) (Object) entityType);

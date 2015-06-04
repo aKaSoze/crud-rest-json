@@ -11,8 +11,17 @@ public class Validator<T extends Identifiable<K>, K> {
 	}
 
 	public void validate(T t) throws ValidationException {
-		if (repo.exists(other -> t.getName().equalsIgnoreCase(other.getName()))) {
-			throw new ValidationException();
+
+		ValidationException exception = new ValidationException();
+
+		if (t.getName() == null) {
+			exception.addIssue("name", "Must not be null.");
+		} else if (repo.exists(other -> t.getName().equalsIgnoreCase(other.getName()))) {
+			exception.addIssue("name", "Must be unique.");
+		}
+
+		if (exception.hasIssues()) {
+			throw exception;
 		}
 	}
 
